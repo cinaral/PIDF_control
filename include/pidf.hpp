@@ -1,9 +1,9 @@
-#ifndef PIDF_FILTER_HPP_CINARAL_220822_0805
-#define PIDF_FILTER_HPP_CINARAL_220822_0805
+#ifndef PIDF_HPP_CINARAL_220822_0805
+#define PIDF_HPP_CINARAL_220822_0805
 
 #include "types.hpp"
 
-namespace pidf_filter
+namespace pidf
 {
 
 //* Derivative (Filtered) filter
@@ -14,7 +14,7 @@ namespace pidf_filter
 //*
 //* x -> DF(s) -> y
 template <uint_t Y_DIM>
-void
+class {
 DF(const real_t T_s, const real_t T_f, const real_t x[], const real_t x_next[], const real_t y[], real_t y_next[])
 {
 	const real_t coef_LHS = (2. * T_f + T_s);
@@ -22,9 +22,13 @@ DF(const real_t T_s, const real_t T_f, const real_t x[], const real_t x_next[], 
 	const real_t coef_x_next = 2. / coef_LHS;
 	const real_t coef_y = -(2. * T_f - T_s) / coef_LHS;
 
+	public:
+	void filter
 	for (uint_t i = 0; i < Y_DIM; ++i) {
 		y_next[i] = coef_x * x[i] + coef_x_next * x_next[i] - coef_y * y[i];
 	}
+
+}
 }
 
 //* Proportional-Derivative (Filtered) filter
@@ -86,8 +90,7 @@ PIDF(const real_t T_s, const real_t T_f, const real_t K_p[], const real_t K_i[],
 	for (uint_t i = 0; i < Y_DIM; ++i) {
 		const real_t coef_x_prev =
 		    (2. * K_p[i] * (2. * T_f - T_s) + K_i[i] * T_s * (T_s - 2. * T_f) + 4. * K_d[i]) / coef_LHS;
-		const real_t coef_x =
-		    (-8. * K_p[i] * T_f + 2. * K_i[i] * T_s * T_s - 8. * K_d[i]) / coef_LHS;
+		const real_t coef_x = (-8. * K_p[i] * T_f + 2. * K_i[i] * T_s * T_s - 8. * K_d[i]) / coef_LHS;
 		const real_t coef_x_next =
 		    (2. * K_p[i] * (2. * T_f + T_s) + K_i[i] * T_s * (T_s + 2. * T_f) + 4. * K_d[i]) / coef_LHS;
 		const real_t coef_y_prev = (4. * T_f - T_s) / coef_LHS;
@@ -98,6 +101,6 @@ PIDF(const real_t T_s, const real_t T_f, const real_t K_p[], const real_t K_i[],
 	}
 }
 
-} // namespace pidf_filter
+} // namespace pidf
 
 #endif
