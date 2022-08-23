@@ -7,7 +7,7 @@ set(pidf_VERSION 0.1.0)
 set(rk4_solver_VERSION 1.0.1)
 set(matrix_rw_VERSION 1.0.0)
 
-project(PIDF VERSION ${pidf_VERSION} LANGUAGES CXX)
+project(pidf VERSION ${pidf_VERSION} LANGUAGES CXX)
 
 #* only if we're in the root in order to not populate FetchContent()
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
