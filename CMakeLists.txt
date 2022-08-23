@@ -3,9 +3,11 @@
 #***********#
 cmake_minimum_required(VERSION 3.13)
 
-set(PIDF_VERSION 1.0.0)
+set(pidf_VERSION 1.0.0)
+set(rk4_solver_VERSION 1.0.1)
+set(matrix_rw_VERSION 1.0.0)
 
-project(PIDF VERSION ${PIDF_VERSION} LANGUAGES CXX)
+project(PIDF VERSION ${pidf_VERSION} LANGUAGES CXX)
 
 #* only if we're in the root in order to not populate FetchContent()
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -15,8 +17,9 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(BUILD_EXAMPLES "Build examples" ON)
 	option(BUILD_BENCHMARK "Build tests" ON)
 
+
 	#****************************************#
-	#* Cmake, language and compiler options *#
+	#* CMake, language and compiler options *#
 	#****************************************#
 	#* [Optional]:
 	set(CMAKE_CXX_STANDARD 17)
@@ -30,15 +33,15 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		-Wall #* all warnings
 		-Wextra #* more warnings
 		-Wpedantic #* more warnings
-		#-D__USE_SINGLE_PRECISION__ #* use single precision floats over double precision
+		-D__USE_SINGLE_PRECISION__ #* use single precision floats over double precision
 		#-fno-math-errno #* disable errno 
 		##* [Optional]: for embedded systems the following flags may be enabled
-		#-fno-rtti #* disable RTTI 
-		#-fno-exceptions #* disable exceptions  
-		#-fno-non-call-exceptions  
-		#-fno-use-cxa-atexit #* disable destructors 
-		#-fno-common #* declare globals once 
-		#-ffreestanding #* standard library may be unavailable 
+		-fno-rtti #* disable RTTI 
+		-fno-exceptions #* disable exceptions  
+		-fno-non-call-exceptions  
+		-fno-use-cxa-atexit #* disable destructors 
+		-fno-common #* declare globals once 
+		-ffreestanding #* standard library may be unavailable 
 	)
 
 	#* force build type if CMake Tools fail to do so, change "Debug" to "Release" for release
@@ -58,20 +61,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#* set up directories for binary, library and data files 
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 	file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/dat)
-
-	#* set the number of cores for compilation
-	if(SET_CORE_COUNT)
-		include(ProcessorCount)
-		ProcessorCount(N)
-
-		if(NOT N EQUAL 0)
-			set(CTEST_BUILD_FLAGS -j${N})
-			set(ctest_test_args ${ctest_test_args} PARALLEL_LEVEL ${N})
-		endif()
-		message("> Number of cores set to ${N}")
-	endif()
 
 	
 	#***********# 
@@ -79,14 +69,20 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#***********#
 	if(BUILD_TESTS)
 	
-		#* matrix_rw, used for testing
-		include(FetchContent)
+		include(FetchContent)	
 
+		#* rk4_solver, used for testing
+		FetchContent_Declare(rk4_solver                             
+			URL https://github.com/cinaral/rk4_solver/releases/download/v${rk4_solver_VERSION}/rk4_solver-src.zip
+		)
+		FetchContent_MakeAvailable(rk4_solver)
+		set(rk4_solver_INCLUDE_DIR ${rk4_solver_SOURCE_DIR}/include)
+
+		#* matrix_rw, used for testing
 		FetchContent_Declare(matrix_rw                             
-			URL https://github.com/cinaral/matrix_rw/releases/download/v1.0.0/matrix_rw-src.zip
+			URL https://github.com/cinaral/matrix_rw/releases/download/v${matrix_rw_VERSION}/matrix_rw-src.zip
 		)
 		FetchContent_MakeAvailable(matrix_rw)
-
 		set(matrix_rw_INCLUDE_DIR ${matrix_rw_SOURCE_DIR}/include)
 
 		#* enable testing
@@ -94,7 +90,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 		#* list of the tests
 		set(TEST_NAMES
-			test-PIDF-DF
+			test-pidf-DF
 			#test-PIDF-PDF
 			#test-PIDF-PI
 			#test-PIDF-PIDF
@@ -108,6 +104,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 				PUBLIC 
 					${INCLUDE_DIR} 
 					${matrix_rw_INCLUDE_DIR}
+					${rk4_solver_INCLUDE_DIR}
 			)
 
 			add_test(NAME              ${ELEMENT} 
@@ -136,6 +133,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		endforeach(ELEMENT ${EXAMPLE_NAMES})
 	endif()
 
+
 	#************************#
 	#* Packaged source code *#
 	#************************#
@@ -148,5 +146,3 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	add_custom_target(${PROJECT_NAME}_package DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip)
 
 endif()
-
-
