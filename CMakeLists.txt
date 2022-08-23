@@ -33,7 +33,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		-Wall #* all warnings
 		-Wextra #* more warnings
 		-Wpedantic #* more warnings
-		-O3
+		#-O3
 		#-D__USE_SINGLE_PRECISION__ #* use single precision floats over double precision
 		#-fno-math-errno #* disable errno 
 		##* [Optional]: for embedded systems the following flags may be enabled
@@ -92,9 +92,9 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		#* list of the tests
 		set(TEST_NAMES
 			test-pidf-DF
-			#test-PIDF-PDF
-			#test-PIDF-PI
-			#test-PIDF-PIDF
+			test-pidf-PDF
+			#test-pidf-PI
+			#test-pidf-PIDF
 		)
 
 		#* loops through all tests
