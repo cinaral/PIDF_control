@@ -33,7 +33,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		-Wall #* all warnings
 		-Wextra #* more warnings
 		-Wpedantic #* more warnings
-		#-O3
 		#-D__USE_SINGLE_PRECISION__ #* use single precision floats over double precision
 		#-fno-math-errno #* disable errno 
 		##* [Optional]: for embedded systems the following flags may be enabled
