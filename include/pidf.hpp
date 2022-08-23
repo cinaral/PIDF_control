@@ -25,9 +25,7 @@ DF(const real_t T_s, const real_t T_f, const real_t x[], const real_t x_next[], 
 	for (uint_t i = 0; i < Y_DIM; ++i) {
 		y_next[i] = coef_x * x[i] + coef_x_next * x_next[i] - coef_y * y[i];
 	}
-
 }
-
 
 //* Proportional-Derivative (Filtered) filter
 //*                         s

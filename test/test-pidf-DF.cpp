@@ -1,6 +1,8 @@
 #include "matrix_rw.hpp"
 #include "pidf.hpp"
+#include <chrono>
 #include <cmath>
+#include <iostream>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -40,9 +42,11 @@ main()
 	//*******
 	//* test
 	//*******
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
 	for (uint_t i = 0; i < t_dim; ++i) {
 
-		t_arr[i] = i * h;	
+		t_arr[i] = i * h;
 		x_next[0] = sin(t_arr[i] * 2. * M_PI * f);
 
 		pidf::DF<x_dim>(h, T_f, x, x_next, dt__x, dt__x_arr + i);
@@ -51,6 +55,10 @@ main()
 		x[0] = x_next[0];
 		dt__x[0] = dt__x_arr[i];
 	}
+
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	std::cout << " time (us): " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()
+		  << std::endl;
 
 	//******************
 	//* write test data

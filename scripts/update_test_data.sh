@@ -3,8 +3,6 @@
 #* specifytest data
 test_data_list=(
 	"test-pidf-DF-dt__x_arr.dat"
-	"test-rk4_solver-motor-x_arr_chk.dat"
-	"test-rk4_solver-ball-x_arr_chk.dat"
 	)
 
 #* remove existing test data
