@@ -2,11 +2,9 @@
 //* test__pidf_PDF.m can generate it in ./dat if you have MATLAB (see README.md)
 //* then copy to ./test/dat or use ./scripts/update_test_data.sh
 
-#include "matrix.hpp"
 #include "matrix_rw.hpp"
 #include "pidf.hpp"
 #include "rk4_solver.hpp"
-#include <cmath>
 
 //********
 //* setup
@@ -20,6 +18,7 @@ const std::string t_arr_fname = "t_arr.dat";
 const std::string x_arr_fname = "x_arr.dat";
 const std::string x_arr_chk_fname = "x_arr_chk.dat";
 const std::string u_arr_fname = "u_arr.dat";
+const std::string u_arr_chk_fname = "u_arr_chk.dat";
 
 constexpr uint_t t_dim = 1e3;
 constexpr uint_t x_dim = 3;
@@ -32,9 +31,9 @@ constexpr real_t K_p[u_dim] = {6.};
 constexpr real_t K_d[u_dim] = {.2};
 constexpr real_t R = 1; //* unit step
 #ifdef __USE_SINGLE_PRECISION__
-constexpr real_t error_thres = 1e-5;
+constexpr real_t error_thres = 1e-4;
 #else
-constexpr real_t error_thres = 1e-13;
+constexpr real_t error_thres = 1e-11;
 #endif
 
 //* Crouzet 89830012:
@@ -84,12 +83,11 @@ main()
 	//* read test data
 	//*****************
 	matrix_rw::read<t_dim, x_dim>(test_dat_prefix + x_arr_chk_fname, x_arr_chk);
+	matrix_rw::read<t_dim, u_dim>(test_dat_prefix + u_arr_chk_fname, u_arr_chk);
 
 	//*******
 	//* test
 	//*******
-	// rk4_solver::cum_loop<ode_fun, t_dim, x_dim>(t0, x0, h, t_arr, x_arr);
-
 	real_t x[x_dim] = {0};
 	matrix::replace_row<x_dim>(0, x0, x); //* initialize x
 	real_t t = t0;                        //* initialize t
@@ -120,21 +118,30 @@ main()
 	//*********
 	//* verify
 	//*********
-	real_t max_error = 0.;
+	real_t max_x_error = 0.;
+	real_t max_u_error = 0.;
 
 	for (uint_t i = 0; i < t_dim; ++i) {
 		const real_t *x_ = matrix::select_row<x_dim>(i, x_arr);
 		const real_t *x_chk_ = matrix::select_row<x_dim>(i, x_arr_chk);
 
 		for (uint_t j = 0; j < x_dim; ++j) {
-			real_t error = std::abs(x_[j] - x_chk_[j]);
-			if (error > max_error) {
-				max_error = error;
+			real_t x_error = std::abs(x_[j] - x_chk_[j]);
+			if (x_error > max_x_error) {
+				max_x_error = x_error;
 			}
+		}
+
+		const real_t *u_ = matrix::select_row<u_dim>(i, u_arr);
+		const real_t *u_chk_ = matrix::select_row<u_dim>(i, u_arr_chk);
+
+		real_t u_error = std::abs(u_[0] - u_chk_[0]);
+		if (u_error > max_u_error) {
+			max_u_error = u_error;
 		}
 	}
 
-	if (max_error < error_thres) {
+	if (max_x_error < error_thres && max_u_error < error_thres) {
 		return 0;
 	} else {
 		return 1;

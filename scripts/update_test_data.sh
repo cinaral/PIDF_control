@@ -3,6 +3,7 @@
 #* specifytest data
 test_data_list=(
 	"test-pidf-PDF-x_arr_chk.dat"
+	"test-pidf-PDF-u_arr_chk.dat"
 	)
 
 #* remove existing test data
