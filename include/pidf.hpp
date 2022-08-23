@@ -27,6 +27,28 @@ DF(const real_t T_s, const real_t T_f, const real_t x[], const real_t x_next[], 
 	}
 }
 
+//* This isn't faster, the compiler is smart enough to not repeat the same calc provided that consts are passed:
+//template <uint_t Y_DIM> class DF
+//{
+//   private:
+// const real_t T_f, T_s;
+// const real_t coef_LHS = (2. * T_f + T_s);
+// const real_t coef_x = -2. / coef_LHS;
+// const real_t coef_x_next = 2. / coef_LHS;
+// const real_t coef_y = -(2. * T_f - T_s) / coef_LHS;
+
+//  public:
+//    DF(const real_t T_s, const real_t T_f) : T_f(T_f), T_s(T_s){};
+
+//    void
+//    filter(const real_t x[], const real_t x_next[], const real_t y[], real_t y_next[])
+//    {
+//        for (uint_t i = 0; i < Y_DIM; ++i) {
+//            y_next[i] = coef_x * x[i] + coef_x_next * x_next[i] - coef_y * y[i];
+//        }
+//    }
+//};
+
 //* Proportional-Derivative (Filtered) filter
 //*                         s
 //* PDF(s) = K_p + K_d -----------

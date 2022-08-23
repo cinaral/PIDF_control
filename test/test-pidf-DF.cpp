@@ -1,8 +1,8 @@
 #include "matrix_rw.hpp"
 #include "pidf.hpp"
-#include <chrono>
 #include <cmath>
-#include <iostream>
+//#include <chrono>
+//#include <iostream>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -36,13 +36,15 @@ real_t x_arr[t_dim * x_dim];
 real_t dt__x[x_dim] = {0};
 real_t dt__x_arr[t_dim * x_dim] = {0};
 
+// pidf::DF<x_dim> DF(h, T_f);
+
 int
 main()
 {
 	//*******
 	//* test
 	//*******
-	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	// std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
 	for (uint_t i = 0; i < t_dim; ++i) {
 
@@ -51,14 +53,16 @@ main()
 
 		pidf::DF<x_dim>(h, T_f, x, x_next, dt__x, dt__x_arr + i);
 
+		// DF.filter(x, x_next, dt__x, dt__x_arr + i);
+
 		//* next x, dt__x becomes previous
 		x[0] = x_next[0];
 		dt__x[0] = dt__x_arr[i];
 	}
 
-	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	std::cout << " time (us): " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()
-		  << std::endl;
+	// std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	// std::cout << " time (us): " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()
+	//	  << std::endl;
 
 	//******************
 	//* write test data
