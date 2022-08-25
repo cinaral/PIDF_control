@@ -138,7 +138,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#* Packaged source code *#
 	#************************#
 	#* Thanks to https://www.foonathan.net/2022/06/cmake-fetchcontent/
-	set(PACKAGE_FILES include/types.hpp include/pidf.hpp CMakeLists.txt LICENSE)
+	set(PACKAGE_FILES include/pidf.hpp CMakeLists.txt LICENSE)
 	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip
 		COMMAND ${CMAKE_COMMAND} -E tar c ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip --format=zip -- ${PACKAGE_FILES}
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
