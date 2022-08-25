@@ -6,6 +6,13 @@
 namespace pidf
 {
 
+using uint_t = unsigned long long int;
+#ifdef __USE_SINGLE_PRECISION__
+using real_t = float;
+#else
+using real_t = double;
+#endif
+
 //* Derivative (Filtered) filter
 //*
 //*              s
