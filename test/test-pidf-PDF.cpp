@@ -6,6 +6,9 @@
 #include "pidf.hpp"
 #include "rk4_solver.hpp"
 
+using real_t = pidf::real_t;
+using uint_t = pidf::uint_t;
+
 //********
 //* setup
 //********

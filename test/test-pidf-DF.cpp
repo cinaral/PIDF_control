@@ -1,8 +1,9 @@
 #include "matrix_rw.hpp"
 #include "pidf.hpp"
 #include <cmath>
-//#include <chrono>
-//#include <iostream>
+
+using real_t = pidf::real_t;
+using uint_t = pidf::uint_t;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -47,8 +48,6 @@ main()
 		x_next[0] = sin(t_arr[i] * 2. * M_PI * f);
 
 		pidf::DF<x_dim>(h, T_f, x, x_next, dt__x, dt__x_arr + i);
-
-		// DF.filter(x, x_next, dt__x, dt__x_arr + i);
 
 		//* next x, dt__x becomes previous
 		x[0] = x_next[0];

@@ -1,8 +1,6 @@
 #ifndef PIDF_HPP_CINARAL_220822_0805
 #define PIDF_HPP_CINARAL_220822_0805
 
-#include "types.hpp"
-
 namespace pidf
 {
 
