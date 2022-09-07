@@ -11,12 +11,9 @@ project(pidf VERSION ${pidf_VERSION} LANGUAGES CXX)
 
 #* only if we're in the root in order to not populate FetchContent()
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-	option(FORCE_BUILD_TYPE "Forces build type" OFF)
-	option(SET_CORE_COUNT "Sets number of cores used in compilation" ON)
 	option(BUILD_TESTS "Build tests" ON)
 	option(BUILD_EXAMPLES "Build examples" ON)
 	option(BUILD_BENCHMARK "Build tests" ON)
-
 
 	#****************************************#
 	#* CMake, language and compiler options *#
@@ -53,7 +50,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 	file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/dat)
 
-	
 	#***********# 
 	#* Testing *#
 	#***********#
@@ -103,7 +99,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		endforeach(ELEMENT ${TEST_NAMES})
 	endif()
 
-
 	#************#
 	#* Examples *#
 	#************#
@@ -122,7 +117,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			)
 		endforeach(ELEMENT ${EXAMPLE_NAMES})
 	endif()
-
 
 	#************************#
 	#* Packaged source code *#
