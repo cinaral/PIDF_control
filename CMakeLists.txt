@@ -1,132 +1,123 @@
-#***********#
-#* Project *#
-#***********#
 cmake_minimum_required(VERSION 3.13)
 
-set(pidf_VERSION 0.1.1)
-set(rk4_solver_VERSION 1.0.2)
-set(matrix_rw_VERSION 1.0.1)
+project(
+	pid_control
+	VERSION 0.1.2
+	LANGUAGES CXX
+)
 
-project(pidf VERSION ${pidf_VERSION} LANGUAGES CXX)
+Include(FetchContent)
 
-#* only if we're in the root in order to not populate FetchContent()
+#********#
+#* Self *#
+#********#
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	option(SINGLE_PRECISION "Single precision" OFF)
 	option(BUILD_TESTS "Build tests" ON)
-	option(BUILD_EXAMPLES "Build examples" ON)
-	option(BUILD_BENCHMARK "Build tests" ON)
 
-	#****************************************#
-	#* CMake, language and compiler options *#
-	#****************************************#
-	#* [Optional]:
 	set(CMAKE_CXX_STANDARD 17)
 	set(CMAKE_CXX_STANDARD_REQUIRED ON)
 	set(CMAKE_CXX_EXTENSIONS OFF)
 
-	#* project compilation flags
 	add_compile_options(
 		-fdiagnostics-color=always #* colored debug output
 		-fmessage-length=0 #* disable line wrapping (default=72 char) 
 		-Wall #* all warnings
 		-Wextra #* more warnings
 		-Wpedantic #* more warnings
-		#-D__USE_SINGLE_PRECISION__ #* use single precision floats over double precision
-		#-fno-math-errno #* disable errno 
-		##* [Optional]: for embedded systems the following flags may be enabled
-		-fno-rtti #* disable RTTI 
-		-fno-exceptions #* disable exceptions  
-		-fno-non-call-exceptions  
-		-fno-use-cxa-atexit #* disable destructors 
-		-fno-common #* declare globals once 
-		-ffreestanding #* standard library may be unavailable 
 	)
+
+	if(SINGLE_PRECISION)
+		add_compile_options(-D__USE_SINGLE_PRECISION__) #* use single precision floats
+	endif()
 
 	#* where to look for the project header and source files
 	set(INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
 	set(SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
+	set(TEST_DIR ${CMAKE_CURRENT_LIST_DIR}/test)
 
-	#* set up directories for binary, library and data files 
+	#* tests, examples, benchmarks to compile
+	set(TEST_NAMES
+		test-pid_control-DF
+		test-pid_control-PDF
+		#test-pid_control-PI
+		#test-pid_control-PIDF
+	)
+
+	#* files to package
+	set(PACKAGE_FILES 
+		include/${PROJECT_NAME}/
+		include/${PROJECT_NAME}.hpp 
+		CMakeLists.txt 
+		LICENSE
+	)
+
+	#* set up output directories
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-	file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/dat)
+	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/dat)
 
-	#***********# 
+	#***********#
 	#* Testing *#
 	#***********#
 	if(BUILD_TESTS)
-	
-		include(FetchContent)	
-
-		#* rk4_solver, used for testing
-		FetchContent_Declare(rk4_solver                             
-			URL https://github.com/cinaral/rk4_solver/releases/download/v${rk4_solver_VERSION}/rk4_solver-src.zip
-		)
-		FetchContent_MakeAvailable(rk4_solver)
-		set(rk4_solver_INCLUDE_DIR ${rk4_solver_SOURCE_DIR}/include)
+		enable_testing()
 
 		#* matrix_rw, used for testing
-		FetchContent_Declare(matrix_rw                             
+		set(matrix_rw_VERSION 1.0.2)
+		FetchContent_Declare(
+			matrix_rw 
 			URL https://github.com/cinaral/matrix_rw/releases/download/v${matrix_rw_VERSION}/matrix_rw-src.zip
 		)
 		FetchContent_MakeAvailable(matrix_rw)
 		set(matrix_rw_INCLUDE_DIR ${matrix_rw_SOURCE_DIR}/include)
 
-		#* enable testing
-		enable_testing()
-
-		#* list of the tests
-		set(TEST_NAMES
-			test-pidf-DF
-			test-pidf-PDF
-			#test-pidf-PI
-			#test-pidf-PIDF
+		#* matrix_op, used for testing
+		set(matrix_op_VERSION 1.0.3)
+		FetchContent_Declare(
+			matrix_op 
+			URL https://github.com/cinaral/matrix_op/releases/download/v${matrix_op_VERSION}/matrix_op-src.zip
 		)
+		FetchContent_MakeAvailable(matrix_op)
+		set(matrix_op_INCLUDE_DIR ${matrix_op_SOURCE_DIR}/include)
+		
+		#* rk4_solver, used for testing
+		set(rk4_solver_VERSION 1.0.6)
+		FetchContent_Declare(
+			rk4_solver                             
+			URL https://github.com/cinaral/rk4_solver/releases/download/v${rk4_solver_VERSION}/rk4_solver-src.zip
+		)
+		FetchContent_MakeAvailable(rk4_solver)
+		set(rk4_solver_INCLUDE_DIR ${rk4_solver_SOURCE_DIR}/include)
 
-		#* loops through all tests
 		foreach(ELEMENT ${TEST_NAMES})
-			add_executable(${ELEMENT} test/${ELEMENT}.cpp)
-
-			target_include_directories( ${ELEMENT}
-				PUBLIC 
-					${INCLUDE_DIR} 
-					${matrix_rw_INCLUDE_DIR}
-					${rk4_solver_INCLUDE_DIR}
+			add_executable(
+				${ELEMENT} 
+				${TEST_DIR}/${ELEMENT}.cpp						
 			)
 
-			add_test(NAME              ${ELEMENT} 
-					COMMAND           ${ELEMENT}
-					WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+			target_include_directories(
+				${ELEMENT} PRIVATE 
+				${INCLUDE_DIR}
+				${matrix_rw_INCLUDE_DIR}
+				${matrix_op_INCLUDE_DIR}
+				${rk4_solver_INCLUDE_DIR}
+			)
+
+			add_test(
+				NAME ${ELEMENT} 
+				COMMAND ${ELEMENT}
+				WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+			)
 		endforeach(ELEMENT ${TEST_NAMES})
 	endif()
-
-	#************#
-	#* Examples *#
-	#************#
-	if(BUILD_EXAMPLES)
-		#* list of the examples
-		set(EXAMPLE_NAMES
-		)
-
-		#* loops through all exampkes
-		foreach(ELEMENT ${EXAMPLE_NAMES})
-			add_executable(${ELEMENT} examples/${ELEMENT}.cpp)
-
-			target_include_directories(${ELEMENT}
-				PUBLIC 
-					${INCLUDE_DIR}	
-			)
-		endforeach(ELEMENT ${EXAMPLE_NAMES})
-	endif()
-
+	
 	#************************#
 	#* Packaged source code *#
 	#************************#
-	#* Thanks to https://www.foonathan.net/2022/06/cmake-fetchcontent/
-	set(PACKAGE_FILES include/pidf.hpp CMakeLists.txt LICENSE)
 	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip
 		COMMAND ${CMAKE_COMMAND} -E tar c ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip --format=zip -- ${PACKAGE_FILES}
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		DEPENDS ${PACKAGE_FILES})
-	add_custom_target(${PROJECT_NAME}_package DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip)
+	add_custom_target(src_package DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip)
 
 endif()

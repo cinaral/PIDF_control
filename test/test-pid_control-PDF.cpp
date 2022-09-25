@@ -1,22 +1,17 @@
-//* requires input data for verification
-//* test__pidf_PDF.m can generate it in ./dat if you have MATLAB (see README.md)
-//* then copy to ./test/dat or use ./scripts/update_test_data.sh
-
+#include "matrix_op.hpp"
 #include "matrix_rw.hpp"
-#include "pidf.hpp"
+#include "pid_control.hpp"
 #include "rk4_solver.hpp"
 
-using real_t = pidf::real_t;
-using uint_t = pidf::uint_t;
+using real_t = pid_control::real_t;
+using uint_t = pid_control::uint_t;
 
-//********
 //* setup
-//********
-const std::string dat_dir = "../../dat";
-const std::string test_dat_dir = "../../test/dat";
-const std::string test_name = "test-pidf-PDF";
-const std::string dir_prefix = dat_dir + "/" + test_name + "-";
-const std::string test_dat_prefix = test_dat_dir + "/" + test_name + "-";
+const std::string dat_dir = "../dat";
+const std::string ref_dat_dir = "../../test/reference_dat";
+const std::string test_name = "test-pid_control-PDF";
+const std::string dat_prefix = dat_dir + "/" + test_name + "-";
+const std::string ref_dat_prefix = ref_dat_dir + "/" + test_name + "-";
 const std::string t_arr_fname = "t_arr.dat";
 const std::string x_arr_fname = "x_arr.dat";
 const std::string x_arr_chk_fname = "x_arr_chk.dat";
@@ -33,6 +28,7 @@ constexpr real_t T_f = h * 1e1;
 constexpr real_t K_p[u_dim] = {6.};
 constexpr real_t K_d[u_dim] = {.2};
 constexpr real_t R = 1; //* unit step
+
 #ifdef __USE_SINGLE_PRECISION__
 constexpr real_t error_thres = 1e-4;
 #else
@@ -60,73 +56,68 @@ control_fun(const real_t x_next[], real_t u_next[])
 {
 	real_t error_next[u_dim] = {R - x_next[0]};
 
-	pidf::PDF<u_dim>(h, T_f, K_p, K_d, error, error_next, u, u_next);
+	pid_control::PDF<u_dim>(h, T_f, K_p, K_d, error, error_next, u, u_next);
 
 	error[0] = error_next[0];
 	u[0] = u_next[0];
 }
 
-void
-ode_fun(const real_t, const real_t x[], const uint_t i, real_t dt__x[])
-{
-	real_t temp0[x_dim];
-	real_t temp1[x_dim];
+struct Dynamics {
+	void
+	ode_fun(const real_t, const real_t (&x)[x_dim], const uint_t i, real_t (&dt__x)[x_dim])
+	{
+		real_t temp0[x_dim];
+		real_t temp1[x_dim];
 
-	const real_t *u = matrix::select_row<u_dim>(i, u_arr);
+		const real_t(&u)[u_dim] = *matrix_op::select_row<t_dim, u_dim>(i, u_arr);
 
-	matrix::right_multiply<x_dim, x_dim>(A, x, temp0);
-	matrix::right_multiply<x_dim, u_dim>(B, u, temp1);
-	matrix::sum<x_dim>(temp0, temp1, dt__x);
-}
+		matrix_op::right_multiply<x_dim, x_dim>(A, x, temp0);
+		matrix_op::right_multiply<x_dim, u_dim>(B, u, temp1);
+		matrix_op::sum<x_dim>(temp0, temp1, dt__x);
+	}
+};
+Dynamics dyn;
 
 int
 main()
 {
-	//*****************
-	//* read test data
-	//*****************
-	matrix_rw::read<t_dim, x_dim>(test_dat_prefix + x_arr_chk_fname, x_arr_chk);
-	matrix_rw::read<t_dim, u_dim>(test_dat_prefix + u_arr_chk_fname, u_arr_chk);
+	//* read reference data
+	matrix_rw::read<t_dim, x_dim>(ref_dat_prefix + x_arr_chk_fname, x_arr_chk);
+	matrix_rw::read<t_dim, u_dim>(ref_dat_prefix + u_arr_chk_fname, u_arr_chk);
 
-	//*******
 	//* test
-	//*******
-	real_t x[x_dim] = {0};
-	matrix::replace_row<x_dim>(0, x0, x); //* initialize x
-	real_t t = t0;                        //* initialize t
+	real_t x[x_dim];
+	matrix_op::replace_row<1, x_dim>(0, x0, x); //* initialize x
+	real_t t = t0;                              //* initialize t
 
 	t_arr[0] = t;
-	matrix::replace_row<x_dim>(0, x, x_arr);
+	matrix_op::replace_row<t_dim, x_dim>(0, x, x_arr);
 
 	for (uint_t i = 0; i < t_dim - 1; ++i) {
 		real_t u_next[u_dim];
 		control_fun(x, u_next);
 		u_arr[i] = u_next[0];
 
-		rk4_solver::step<ode_fun, x_dim>(t, x, h, i, x); //* update x to the next x
+		rk4_solver::step<Dynamics, x_dim>(dyn, &Dynamics::ode_fun, t, x, h, i, x); //* update x to the next x
 
 		t = t0 + (i + 1) * h; //* update t to the next t
 
 		t_arr[i + 1] = t;
-		matrix::replace_row<x_dim>(i + 1, x, x_arr);
+		matrix_op::replace_row<t_dim, x_dim>(i + 1, x, x_arr);
 	}
 
-	//******************
 	//* write test data
-	//******************
-	matrix_rw::write<t_dim, 1>(dir_prefix + t_arr_fname, t_arr);
-	matrix_rw::write<t_dim, x_dim>(dir_prefix + x_arr_fname, x_arr);
-	matrix_rw::write<t_dim, u_dim>(dir_prefix + u_arr_fname, u_arr);
+	matrix_rw::write<t_dim, 1>(dat_prefix + t_arr_fname, t_arr);
+	matrix_rw::write<t_dim, x_dim>(dat_prefix + x_arr_fname, x_arr);
+	matrix_rw::write<t_dim, u_dim>(dat_prefix + u_arr_fname, u_arr);
 
-	//*********
 	//* verify
-	//*********
 	real_t max_x_error = 0.;
 	real_t max_u_error = 0.;
 
 	for (uint_t i = 0; i < t_dim; ++i) {
-		const real_t *x_ = matrix::select_row<x_dim>(i, x_arr);
-		const real_t *x_chk_ = matrix::select_row<x_dim>(i, x_arr_chk);
+		const real_t (&x_)[x_dim] = *matrix_op::select_row<t_dim, x_dim>(i, x_arr);
+		const real_t (&x_chk_)[x_dim] = *matrix_op::select_row<t_dim, x_dim>(i, x_arr_chk);
 
 		for (uint_t j = 0; j < x_dim; ++j) {
 			real_t x_error = std::abs(x_[j] - x_chk_[j]);
@@ -135,8 +126,8 @@ main()
 			}
 		}
 
-		const real_t *u_ = matrix::select_row<u_dim>(i, u_arr);
-		const real_t *u_chk_ = matrix::select_row<u_dim>(i, u_arr_chk);
+		const real_t (&u_)[u_dim] = *matrix_op::select_row<t_dim, u_dim>(i, u_arr);
+		const real_t (&u_chk_)[u_dim] = *matrix_op::select_row<t_dim, u_dim>(i, u_arr_chk);
 
 		real_t u_error = std::abs(u_[0] - u_chk_[0]);
 		if (u_error > max_u_error) {

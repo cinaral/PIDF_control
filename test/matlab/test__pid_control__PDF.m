@@ -3,9 +3,12 @@
 %********
 addpath('..\..\matlab');
 
-io_config;
-test_name = 'test-pidf-PDF';
-prefix = append(dat_dir, '/', test_name, '-');
+bin_dir = '../../build/bin';
+dat_dir = '../../build/dat';
+ref_dat_dir = "../reference_dat";
+test_name = 'test-pid_control-PDF';
+dat_prefix = append(dat_dir, '/', test_name, '-');
+ref_dat_prefix = append(ref_dat_dir, '/', test_name, '-');
 exe_name = append(test_name, '.exe');
 t_arr_fname = 't_arr.dat';
 x_arr_fname = 'x_arr.dat';
@@ -13,16 +16,19 @@ x_arr_chk_fname = 'x_arr_chk.dat';
 u_arr_fname = 'u_arr.dat';
 u_arr_chk_fname = 'u_arr_chk.dat';
 
+is_drawing = false;
+is_single_precision = false;
 t_dim = 1e3;
 x_dim = 3;
 u_dim = 1;
-error_thres = 1e-12;
-%* __USE_SINGLE_PRECISION__
-%error_thres = 1e-4;
 
-%*******************
-%* create test data 
-%*******************
+if is_single_precision
+	error_thres = 1e-4; %* single precision
+else 
+	error_thres = 1e-12;
+end
+
+%* create reference data 
 A = [0, 1, 0; 0, -3.038760, 496.1240; 0, -37.64706, -823.5294];
 B = [0; 0; 588.2353];
 C = [1, 0, 0];
@@ -77,48 +83,41 @@ for i = 1:t_dim
 	u_arr_chk(i, :) = u.';
 end
 
-%************************************
-%* write input (for test executable)
-%************************************
-writematrix(x_arr_chk, append(prefix, x_arr_chk_fname), 'Delimiter', delimiter);  
-writematrix(u_arr_chk, append(prefix, u_arr_chk_fname), 'Delimiter', delimiter);  
+writematrix(x_arr_chk, append(ref_dat_prefix, x_arr_chk_fname));  
+writematrix(u_arr_chk, append(ref_dat_prefix, u_arr_chk_fname));  
 
-%***************************
-%* call the test executable
-%***************************
+disp(append('Created reference data for ', test_name));
+
 prev_pwd = pwd;
 cd(bin_dir);
+if isfile(exe_name)
+	%* call the test executable
+	if system(exe_name) > 0
+		warning(append(bin_dir, '/', exe_name, ' has returned failure.'));
+	end
+	
+	%* read the results
+	t_arr = readmatrix(append(dat_prefix, t_arr_fname));
+	x_arr = readmatrix(append(dat_prefix, x_arr_fname));
+	u_arr = readmatrix(append(dat_prefix, u_arr_fname));
 
-if ~isfile(exe_name)
+	%* verify
+	max_error = max(vecnorm(x_arr - x_arr_chk, 2, 2));
+	mean_error = mean(vecnorm(x_arr - x_arr_chk, 2, 2));
+
+	if max_error < error_thres
+		disp(append(test_name, '	ok'));
+	else
+		disp(append(test_name, '	fail'));
+	end
+
+	if is_drawing
+		figure('Name', 'x');
+		hold on;
+		plot(t_arr, x_arr(:, 1));
+		plot(t_arr_chk, x_arr_chk(:, 1), '--');
+	end
+else
 	error(append(bin_dir, '/', exe_name, ' does not exist. Use CMake to build the test.'));
 end
-
-if system(exe_name) > 0
-	warning(append(bin_dir, '/', exe_name, ' has returned failure.'));
-end
-
 cd(prev_pwd);
-
-%******************************************
-%* read output (created by the executable)
-%******************************************
-t_arr = readmatrix(append(prefix, t_arr_fname));
-x_arr = readmatrix(append(prefix, x_arr_fname));
-u_arr = readmatrix(append(prefix, u_arr_fname));
-
-%*********
-%* verify
-%*********
-max_error = max(vecnorm(x_arr - x_arr_chk, 2, 2));
-mean_error = mean(vecnorm(x_arr - x_arr_chk, 2, 2));
-
-if max_error < error_thres
-    disp(append(test_name, '	ok'));
-else
-    disp(append(test_name, '	fail'));
-end
-
-% figure('Name', 'x');
-% hold on;
-% plot(t_arr, x_arr(:, 1));
-% plot(t_arr_chk, x_arr_chk(:, 1), '--');
