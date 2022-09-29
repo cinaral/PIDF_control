@@ -39,18 +39,10 @@ constexpr real_t error_thres = 1e-11;
 constexpr real_t A[x_dim * x_dim] = {0., 1., 0., 0., -3.038760, 496.1240, 0., -37.64706, -823.5294};
 constexpr real_t B[x_dim * u_dim] = {0., 0., 588.2353};
 
-real_t t;
-real_t x[x_dim];
-real_t t_arr[t_dim];
-real_t x_arr[t_dim * x_dim];
-real_t x_arr_chk[t_dim * x_dim];
-real_t u_arr[t_dim * u_dim];
-real_t u_arr_chk[t_dim * u_dim];
-
 real_t u[u_dim] = {0};
+real_t u_arr[t_dim * u_dim];
 real_t error[u_dim] = {0};
 
-//* dt__x = A*x + B*x
 void
 control_fun(const real_t x_next[], real_t u_next[])
 {
@@ -63,6 +55,7 @@ control_fun(const real_t x_next[], real_t u_next[])
 }
 
 struct Dynamics {
+	//* dt__x = A*x + B*x
 	void
 	ode_fun(const real_t, const real_t (&x)[x_dim], const uint_t i, real_t (&dt__x)[x_dim])
 	{
@@ -82,15 +75,20 @@ int
 main()
 {
 	//* read reference data
+	real_t x_arr_chk[t_dim * x_dim];
+	real_t u_arr_chk[t_dim * u_dim];
 	matrix_rw::read<t_dim, x_dim>(ref_dat_prefix + x_arr_chk_fname, x_arr_chk);
 	matrix_rw::read<t_dim, u_dim>(ref_dat_prefix + u_arr_chk_fname, u_arr_chk);
 
 	//* test
+	real_t t_arr[t_dim];
+
 	real_t x[x_dim];
 	matrix_op::replace_row<1, x_dim>(0, x0, x); //* initialize x
 	real_t t = t0;                              //* initialize t
-
 	t_arr[0] = t;
+
+	real_t x_arr[t_dim * x_dim];
 	matrix_op::replace_row<t_dim, x_dim>(0, x, x_arr);
 
 	for (uint_t i = 0; i < t_dim - 1; ++i) {
@@ -116,20 +114,20 @@ main()
 	real_t max_u_error = 0.;
 
 	for (uint_t i = 0; i < t_dim; ++i) {
-		const real_t (&x_)[x_dim] = *matrix_op::select_row<t_dim, x_dim>(i, x_arr);
-		const real_t (&x_chk_)[x_dim] = *matrix_op::select_row<t_dim, x_dim>(i, x_arr_chk);
+		const real_t(&x_)[x_dim] = *matrix_op::select_row<t_dim, x_dim>(i, x_arr);
+		const real_t(&x_chk_)[x_dim] = *matrix_op::select_row<t_dim, x_dim>(i, x_arr_chk);
 
 		for (uint_t j = 0; j < x_dim; ++j) {
-			real_t x_error = std::abs(x_[j] - x_chk_[j]);
+			const real_t x_error = std::abs(x_[j] - x_chk_[j]);
 			if (x_error > max_x_error) {
 				max_x_error = x_error;
 			}
 		}
 
-		const real_t (&u_)[u_dim] = *matrix_op::select_row<t_dim, u_dim>(i, u_arr);
-		const real_t (&u_chk_)[u_dim] = *matrix_op::select_row<t_dim, u_dim>(i, u_arr_chk);
+		const real_t(&u_)[u_dim] = *matrix_op::select_row<t_dim, u_dim>(i, u_arr);
+		const real_t(&u_chk_)[u_dim] = *matrix_op::select_row<t_dim, u_dim>(i, u_arr_chk);
 
-		real_t u_error = std::abs(u_[0] - u_chk_[0]);
+		const real_t u_error = std::abs(u_[0] - u_chk_[0]);
 		if (u_error > max_u_error) {
 			max_u_error = u_error;
 		}

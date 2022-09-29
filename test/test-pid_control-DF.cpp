@@ -30,18 +30,16 @@ constexpr real_t error_thres = 1e-1;
 constexpr real_t error_thres = 1e-1;
 #endif
 
-real_t t = 0;
-real_t t_arr[t_dim];
-real_t x[x_dim] = {0};
-real_t x_next[x_dim];
-real_t x_arr[t_dim * x_dim];
-real_t dt__x[x_dim] = {0};
-real_t dt__x_arr[t_dim * x_dim] = {0};
-
 int
 main()
 {
 	//* test
+	real_t x[x_dim] = {0};
+	real_t dt__x[x_dim] = {0};
+	real_t x_next[x_dim];
+	real_t t_arr[t_dim];
+	real_t dt__x_arr[t_dim * x_dim] = {0};
+
 	for (uint_t i = 0; i < t_dim; ++i) {
 		t_arr[i] = i * h;
 		x_next[0] = sin(t_arr[i] * 2. * M_PI * f);
@@ -62,7 +60,7 @@ main()
 
 	for (uint_t i = 1e4; i < t_dim; ++i) {
 
-		real_t error = std::abs(dt__x_arr[i] - 2 * M_PI * f * cos(t_arr[i] * 2 * M_PI * f));
+		const real_t error = std::abs(dt__x_arr[i] - 2 * M_PI * f * cos(t_arr[i] * 2 * M_PI * f));
 		if (error > max_error) {
 			max_error = error;
 		}
