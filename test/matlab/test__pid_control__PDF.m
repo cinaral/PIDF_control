@@ -1,8 +1,7 @@
 %********
 %* setup
 %********
-addpath('..\..\matlab');
-
+addpath('../../matlab/test');
 bin_dir = '../../build/bin';
 dat_dir = '../../build/dat';
 ref_dat_dir = "../reference_dat";
@@ -18,7 +17,11 @@ u_arr_chk_fname = 'u_arr_chk.dat';
 
 is_drawing = false;
 is_single_precision = false;
-t_dim = 1e3;
+sample_freq = 1e3;
+t_step = 1/sample_freq;
+t_init = 0;
+t_final = 1;
+t_dim = sample_freq*(t_final - t_init) + 1;
 x_dim = 3;
 u_dim = 1;
 
@@ -36,8 +39,7 @@ D = 0;
 K_p = 6;
 K_d = .2;
 
-t_step = 1/(t_dim - 1);
-t_arr_chk = linspace(0, 1, t_dim).';
+t_arr_chk = linspace(t_init, t_final, t_dim).';
 T_f = t_step*1e1;
 r = 1; %* step input
 
@@ -121,3 +123,4 @@ else
 	error(append(bin_dir, '/', exe_name, ' does not exist. Use CMake to build the test.'));
 end
 cd(prev_pwd);
+rmpath('../../matlab/test');

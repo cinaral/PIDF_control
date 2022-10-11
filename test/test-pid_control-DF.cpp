@@ -18,10 +18,13 @@ const std::string ref_dat_prefix = ref_dat_dir + "/" + test_name + "-";
 const std::string t_arr_fname = "t_arr.dat";
 const std::string dt__x_arr_fname = "dt__x_arr.dat";
 
-constexpr uint_t t_dim = 1e5;
+constexpr uint_t sample_freq = 1e5;
+constexpr real_t h = 1. / sample_freq;
+constexpr real_t t0 = 0;
+constexpr real_t tf = 1;
+constexpr uint_t t_dim = sample_freq*(tf - t0) + 1;
 constexpr uint_t x_dim = 1;
-constexpr real_t h = 1. / (t_dim - 1);
-constexpr real_t f = 3.;
+constexpr real_t sine_freq = 3.;
 constexpr real_t T_f = h * 1e1;
 
 #ifdef __USE_SINGLE_PRECISION__
@@ -42,7 +45,7 @@ main()
 
 	for (uint_t i = 0; i < t_dim; ++i) {
 		t_arr[i] = i * h;
-		x_next[0] = sin(t_arr[i] * 2. * M_PI * f);
+		x_next[0] = sin(t_arr[i] * 2. * M_PI * sine_freq);
 
 		pid_control::DF<x_dim>(h, T_f, x, x_next, dt__x, dt__x_arr + i);
 
@@ -60,7 +63,7 @@ main()
 
 	for (uint_t i = 1e4; i < t_dim; ++i) {
 
-		const real_t error = std::abs(dt__x_arr[i] - 2 * M_PI * f * cos(t_arr[i] * 2 * M_PI * f));
+		const real_t error = std::abs(dt__x_arr[i] - 2 * M_PI * sine_freq * cos(t_arr[i] * 2 * M_PI * sine_freq));
 		if (error > max_error) {
 			max_error = error;
 		}

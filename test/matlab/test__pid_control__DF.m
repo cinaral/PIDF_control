@@ -13,7 +13,7 @@ dt__x_arr_fname = 'dt__x_arr.dat';
 
 is_drawing = false;
 is_single_precision = false;
-f = 3;
+sine_freq = 3;
 
 if is_single_precision
 	error_thres = 1e-1; %* single precision
@@ -34,7 +34,7 @@ if isfile(exe_name)
 	dt__x_arr = readmatrix(append(dat_prefix, dt__x_arr_fname));
 
 	%* verify
-	dt__x_arr_chk = 2*pi*f*cos(t_arr*2*pi*f);
+	dt__x_arr_chk = 2*pi*sine_freq*cos(t_arr*2*pi*sine_freq);
 
 	start_idx = find(t_arr > .1, 1, 'first');
 	max_error = max(vecnorm(dt__x_arr(start_idx:end) - dt__x_arr_chk(start_idx:end), 2, 2));
