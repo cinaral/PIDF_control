@@ -36,17 +36,17 @@ namespace pid_control
 //* PI(s) = K_p + K_i s
 //*
 //* x -> PI(s) -> y
-// template <uint_t Y_DIM>
+// template <size_t Y_DIM>
 // void
-// PI(const real_t T_s, const real_t K_p[], const real_t K_i[], const real_t x[], const real_t x_next[], const
-// real_t y[],
-//    real_t y_next[])
+// PI(const Real_T T_s, const Real_T K_p[], const Real_T K_i[], const Real_T x[], const Real_T x_next[], const
+// Real_T y[],
+//    Real_T y_next[])
 //{
-//	constexpr real_t coef_y = -1.;
+//	constexpr Real_T coef_y = -1.;
 
-//	for (uint_t i = 0; i < Y_DIM; ++i) {
-//		const real_t coef_x = -K_p[i] + .5 * K_i[i] * T_s;
-//		const real_t coef_x_next = K_p[i] + .5 * K_i[i] * T_s;
+//	for (size_t i = 0; i < Y_DIM; ++i) {
+//		const Real_T coef_x = -K_p[i] + .5 * K_i[i] * T_s;
+//		const Real_T coef_x_next = K_p[i] + .5 * K_i[i] * T_s;
 
 //		y_next[i] = coef_x * x[i] + coef_x_next * x_next[i] - coef_y * y[i];
 //	}

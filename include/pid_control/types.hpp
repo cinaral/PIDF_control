@@ -27,13 +27,15 @@
 #ifndef TYPES_HPP_CINARAL_220925_0344
 #define TYPES_HPP_CINARAL_220925_0344
 
+#include <cstddef>
+
 namespace pid_control
 {
-using uint_t = unsigned long long int;
+using size_t = std::size_t;
 #ifdef __USE_SINGLE_PRECISION__
-using real_t = float;
+using Real_T = float;
 #else
-using real_t = double;
+using Real_T = double;
 #endif
 } // namespace pidf_control
 

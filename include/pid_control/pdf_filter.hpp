@@ -37,17 +37,17 @@ namespace pid_control
 //*                     T_f s + 1
 //*
 //* x -> PDF(s) -> y
-template <uint_t Y_DIM>
+template <size_t Y_DIM>
 inline void
-PDF(const real_t T_s, const real_t T_f, const real_t K_p[], const real_t K_d[], const real_t x[], const real_t x_next[],
-    const real_t y[], real_t y_next[])
+PDF(const Real_T T_s, const Real_T T_f, const Real_T K_p[], const Real_T K_d[], const Real_T x[], const Real_T x_next[],
+    const Real_T y[], Real_T y_next[])
 {
-	const real_t common_den = (2. * T_f + T_s);
-	const real_t coef_y = (2. * T_f - T_s) / common_den;
+	const Real_T common_den = (2. * T_f + T_s);
+	const Real_T coef_y = (2. * T_f - T_s) / common_den;
 
-	for (uint_t i = 0; i < Y_DIM; ++i) {
-		const real_t coef_x = -(K_p[i] * (2. * T_f - T_s) + 2. * K_d[i]) / common_den;
-		const real_t coef_x_next = (K_p[i] * (2. * T_f + T_s) + 2. * K_d[i]) / common_den;
+	for (size_t i = 0; i < Y_DIM; ++i) {
+		const Real_T coef_x = -(K_p[i] * (2. * T_f - T_s) + 2. * K_d[i]) / common_den;
+		const Real_T coef_x_next = (K_p[i] * (2. * T_f + T_s) + 2. * K_d[i]) / common_den;
 
 		y_next[i] = coef_x * x[i] + coef_x_next * x_next[i] + coef_y * y[i];
 	}
