@@ -9,30 +9,27 @@ project(
 #* dependencies
 Include(FetchContent)
 
-set(matrix_op_VERSION 1.0.3) #* matrix_op, used for testing
-set(rk4_solver_VERSION 1.0.6) #* rk4_solver, used for testing
-set(matrix_rw_VERSION 1.0.2) #* matrix_rw, used for testing
+set(matrix_op_VERSION 1.0.4) #* matrix_op, used for testing
+set(rk4_solver_VERSION 1.0.7) #* rk4_solver, used for testing
+set(matrix_rw_VERSION 1.0.3) #* matrix_rw, used for testing
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	FetchContent_Declare(
 		matrix_rw 
-		URL https://github.com/cinaral/matrix_rw/releases/download/v${matrix_rw_VERSION}/matrix_rw-src.zip
+		URL https://github.com/cinaral/matrix_rw/releases/download/v${matrix_rw_VERSION}/src.zip
 	)
 	FetchContent_Declare(
 		matrix_op 
-		URL https://github.com/cinaral/matrix_op/releases/download/v${matrix_op_VERSION}/matrix_op-src.zip
+		URL https://github.com/cinaral/matrix_op/releases/download/v${matrix_op_VERSION}/src.zip
 	)
 
 	FetchContent_Declare(
 		rk4_solver                             
-		URL https://github.com/cinaral/rk4_solver/releases/download/v${rk4_solver_VERSION}/rk4_solver-src.zip
+		URL https://github.com/cinaral/rk4_solver/releases/download/v${rk4_solver_VERSION}/src.zip
 	)
 	FetchContent_MakeAvailable(matrix_rw)
 	FetchContent_MakeAvailable(matrix_op)
 	FetchContent_MakeAvailable(rk4_solver)
-	set(matrix_rw_INCLUDE_DIR ${matrix_rw_SOURCE_DIR}/include)
-	set(matrix_op_INCLUDE_DIR ${matrix_op_SOURCE_DIR}/include)
-	set(rk4_solver_INCLUDE_DIR ${rk4_solver_SOURCE_DIR}/include)
 endif()
 
 
@@ -40,18 +37,23 @@ endif()
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(SINGLE_PRECISION "Single precision" OFF)
 	option(BUILD_TESTS "Build tests" ON)
+	option(BUILD_EXAMPLES "Build examples" ON)
+	option(BUILD_BENCHMARKS "Build bencmarks" ON)
 
 	#* where to look for the project header and source files
 	set(INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
 	set(SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 	set(TEST_DIR ${CMAKE_CURRENT_LIST_DIR}/test)
+	set(EXAMPLE_DIR ${CMAKE_CURRENT_LIST_DIR}/examples)
+	set(BENCHMARK_DIR ${CMAKE_CURRENT_LIST_DIR}/benchmarks)
 
 	#* tests, examples, benchmarks to compile
 	set(TEST_NAMES
-		test-pid_control-DF
-		test-pid_control-PDF
-		#test-pid_control-PI
-		#test-pid_control-PIDF
+		sine
+	)
+	set(EXAMPLE_NAMES
+	)
+	set(BENCHMARK_NAMES
 	)
 
 	#* files to package
@@ -64,6 +66,8 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 	#* set up output directories
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/dat)
 
 	#* project compile options
@@ -83,6 +87,10 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		add_compile_options(-D__USE_SINGLE_PRECISION__) #* use single precision floats
 	endif()
 
+	#***************#
+	#* Executables *#
+	#***************#
+
 	#***********#
 	#* Testing *#
 	#***********#
@@ -91,24 +99,49 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 		foreach(ELEMENT ${TEST_NAMES})
 			add_executable(
-				${ELEMENT} 
+				${ELEMENT}-test 
 				${TEST_DIR}/${ELEMENT}.cpp						
 			)
 
 			target_include_directories(
 				${ELEMENT} PRIVATE 
-				${INCLUDE_DIR}
-				${matrix_rw_INCLUDE_DIR}
-				${matrix_op_INCLUDE_DIR}
-				${rk4_solver_INCLUDE_DIR}
+				${INCLUDE_DIR}-test 
+				${matrix_rw_SOURCE_DIR}/include
+				${matrix_op_SOURCE_DIR}/include
+				${rk4_solver_SOURCE_DIR}/include
 			)
 
 			add_test(
-				NAME ${ELEMENT} 
-				COMMAND ${ELEMENT}
+				NAME ${ELEMENT}-test  
+				COMMAND ${ELEMENT}-test 
 				WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 			)
 		endforeach(ELEMENT ${TEST_NAMES})
+	endif()
+
+	#*************#
+	#* Benchmark *#
+	#*************#
+	if(BUILD_BENCHMARKS)
+
+		foreach(ELEMENT ${BENCHMARK_NAMES})
+			add_executable(
+				${ELEMENT}-benchmark
+				${BENCHMARK_DIR}/${ELEMENT}.cpp
+			)
+			target_include_directories(
+				${ELEMENT}-benchmark PRIVATE 
+				${INCLUDE_DIR}	
+			)
+			target_compile_options(
+				${ELEMENT}-benchmark PRIVATE
+				-O3 #* optimization level
+				-m64 #* x64
+				-mavx2 #* enable avx2
+				#-fno-math-errno #* disable errno 
+				#-ffast-math #* feeling brave?
+			)
+		endforeach(ELEMENT ${BENCHMARK_NAMES})
 	endif()
 	
 	#************************#
