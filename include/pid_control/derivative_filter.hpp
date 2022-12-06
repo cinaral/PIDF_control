@@ -2,9 +2,9 @@
  * pid_control
  *
  * MIT License
- *
- * Copyright (c) 2022 cinaral
- *
+ * 
+ * Copyright (c) 2022 Cinar, A. L.
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
@@ -38,37 +38,41 @@ namespace pid_control
 //*          T_f s + 1
 //*
 //* x -> DF(s) -> y
-template <size_t X_DIM, size_t Y_DIM>
+template <size_t Y_DIM>
 inline void
-derivative(const Real_T T_sample, const Real_T T_filter, const Real_T (&x)[X_DIM], Real_T (&y)[Y_DIM])
+DF(const Real_T T_s, const Real_T T_f, const Real_T x[], const Real_T x_next[], const Real_T y[], Real_T y_next[])
 {
-	static bool has_initialized = false;
-	static Real_T x_prev[X_DIM];
-	static Real_T y_prev[X_DIM];
-
-	
-	const Real_T coef_LHS = (2. * T_filter + T_sample);
-	const Real_T coef_x_prev = -2. / coef_LHS;
-	const Real_T coef_x = 2. / coef_LHS;
-	const Real_T coef_y_prev = -(2. * T_filter - T_sample) / coef_LHS;
-
-	if (!has_initialized) {
-		for (size_t i = 0; i < Y_DIM; ++i) {
-			x_prev[i] = 0;
-			y_prev[i] = 0;
-		}
-		has_initialized = true;
-		return;
-	}
+	const Real_T coef_LHS = (2. * T_f + T_s);
+	const Real_T coef_x = -2. / coef_LHS;
+	const Real_T coef_x_next = 2. / coef_LHS;
+	const Real_T coef_y = -(2. * T_f - T_s) / coef_LHS;
 
 	for (size_t i = 0; i < Y_DIM; ++i) {
-		y[i] = coef_x_prev * x_prev[i] + coef_x * x[i] - coef_y_prev * y[i];
-	}
-
-	for (size_t i = 0; i < X_DIM; ++i) {
-		x_prev[i] = x[i];
+		y_next[i] = coef_x * x[i] + coef_x_next * x_next[i] - coef_y * y[i];
 	}
 }
-} // namespace pid_control
+//* This isn't faster, the compiler is smart enough to not repeat the same calc provided that consts are passed:
+// template <size_t Y_DIM> class PDF
+//{
+//   private:
+//	const Real_T T_f, T_s;
+//	const Real_T K_p[Y_DIM];
+//	const Real_T K_d[Y_DIM];
+//	const Real_T coef_LHS = (2. * T_f + T_s);
+//	const Real_T coef_y = -(2. * T_f - T_s) / coef_LHS;
+//	const Real_T coef_x = -(K_p[0] * (2. * T_f - T_s) + 2. * K_d[0]) / coef_LHS;
+//	const Real_T coef_x_next = (K_p[0] * (2. * T_f + T_s) + 2. * K_d[0]) / coef_LHS;
+//  public:
+//	PDF(const Real_T T_s, const Real_T T_f, const Real_T K_p[], const Real_T K_d[]) : T_f(T_f), T_s(T_s),
+// K_p{K_p[0]}, K_d{K_d[0]}{};
+//	void
+//	filter(const Real_T x[], const Real_T x_next[], const Real_T y[], Real_T y_next[])
+//	{
+//		for (size_t i = 0; i < Y_DIM; ++i) {
+//			y_next[i] = coef_x * x[i] + coef_x_next * x_next[i] - coef_y * y[i];
+//		}
+//	}
+//};
+} // namespace pidf_control
 
 #endif
