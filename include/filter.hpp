@@ -24,50 +24,54 @@
  * SOFTWARE.
  */
 
-#ifndef DERIVATIVE_FILTER_HPP_CINARAL_220925_0348
-#define DERIVATIVE_FILTER_HPP_CINARAL_220925_0348
+#ifndef FILTER_HPP_CINARAL_221129_2345
+#define FILTER_HPP_CINARAL_221129_2345
 
+#include "matrix_op/row_operations.hpp"
 #include "types.hpp"
 
 namespace pid_control
 {
-//* Realizable derivative filter
+//* Realizable filter
 //*
 //*              s
-//* DF(s) = -----------
+//* F(s) = -----------
 //*          T_f s + 1
 //*
-//* x -> DF(s) -> y
-template <size_t X_DIM, size_t Y_DIM>
+//* in -> F(s) -> out
+template <size_t IN_DIM, size_t OUT_DIM, size_t ORDER>
 inline void
-derivative(const Real_T T_sample, const Real_T T_filter, const Real_T (&x)[X_DIM], Real_T (&y)[Y_DIM])
+derivative(const Real_T coef_in_prev[IN_DIM * ORDER], const Real_T T_filter,
+           const Real_T (&in)[IN_DIM], Real_T (&out)[OUT_DIM])
 {
 	static bool has_initialized = false;
-	static Real_T x_prev[X_DIM];
-	static Real_T y_prev[X_DIM];
+	static Real_T x[IN_DIM * ORDER];
+	static Real_T y[OUT_DIM * ORDER];
 
-	
-	const Real_T coef_LHS = (2. * T_filter + T_sample);
-	const Real_T coef_x_prev = -2. / coef_LHS;
-	const Real_T coef_x = 2. / coef_LHS;
-	const Real_T coef_y_prev = -(2. * T_filter - T_sample) / coef_LHS;
+	matrix_op::replace_row<IN_DIM, ORDER>(0, in, x);
+	matrix_op::replace_row<OUT_DIM, ORDER>(0, out, y);
 
 	if (!has_initialized) {
-		for (size_t i = 0; i < Y_DIM; ++i) {
-			x_prev[i] = 0;
-			y_prev[i] = 0;
+		Real_T in_prev[IN_DIM];
+		Real_T out_prev[OUT_DIM];
+
+		for (size_t i = 0; i < IN_DIM; ++i) {
+			in_prev[i] = 0.;
 		}
+
+		for (size_t i = 0; i < OUT_DIM; ++i) {
+			out_prev[i] = 0.;
+		}
+		matrix_op::replace_row<IN_DIM, ORDER>(1, in_prev, x);
+		matrix_op::replace_row<OUT_DIM, ORDER>(1, out_prev, y);
 		has_initialized = true;
-		return;
 	}
 
-	for (size_t i = 0; i < Y_DIM; ++i) {
-		y[i] = coef_x_prev * x_prev[i] + coef_x * x[i] - coef_y_prev * y[i];
+	for (size_t i = 0; i < IN_DIM * ORDER; ++i) {
+		y[i] = coef_x[i] * x[i] - coef_y[i] * y[i];
 	}
-
-	for (size_t i = 0; i < X_DIM; ++i) {
-		x_prev[i] = x[i];
-	}
+	matrix_op::replace_row<IN_DIM, ORDER>(1, in, x);
+	matrix_op::replace_row<OUT_DIM, ORDER>(1, out, y);
 }
 } // namespace pid_control
 

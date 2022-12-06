@@ -1,2 +1,2 @@
-test__pid_control__DF
-test__pid_control__PDF
+pid_control__DF__test
+pid_control__PDF__test

@@ -12,9 +12,9 @@ using size_t = pid_control::size_t;
 //* setup
 const std::string dat_dir = "../dat";
 const std::string ref_dat_dir = "../../test/reference_dat";
-const std::string test_name = "test-pid_control-DF";
-const std::string dat_prefix = dat_dir + "/" + test_name + "-";
-const std::string ref_dat_prefix = ref_dat_dir + "/" + test_name + "-";
+const std::string test_name = "pid_control-DF";
+const std::string dat_prefix = dat_dir + "/" + test_name + "-test-";
+const std::string ref_dat_prefix = ref_dat_dir + "/" + test_name + "-test-";
 const std::string t_arr_fname = "t_arr.dat";
 const std::string dt__x_arr_fname = "dt__x_arr.dat";
 
